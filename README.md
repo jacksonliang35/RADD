@@ -32,10 +32,11 @@ conda activate radd
 ```
 ## Pretrained Models
 Our RADD models, trained for 400k steps with different loss functions, are available on Hugging Face:
-|Model|Loss function|
-|:---:|:---:|
-|[radd-lambda-dce](https://huggingface.co/JingyangOu/radd-lambda-dce)|$\lambda$-DCE|
-|[radd-t-dce](https://huggingface.co/JingyangOu/radd-t-dce)|$t$-DCE|
+|Model|Loss function|Total model size|
+|:---:|:---:|:---:|
+|[radd-lambda-dce](https://huggingface.co/JingyangOu/radd-lambda-dce)|$\lambda$-DCE|162M|
+|[radd-t-dce](https://huggingface.co/JingyangOu/radd-t-dce)|$t$-DCE|162M|
+|[radd-lambda-dce-medium](https://huggingface.co/JingyangOu/radd-lambda-dce-medium)|$\lambda$-DCE|405M|
 
 For example, to load the `radd-t-dce` model and noise schedule, use the following code:
 ```python
