@@ -29,6 +29,7 @@ class DiffusionSampler(Sampler):
         self.eps = eps
         self.method = method
         self.update_cnt = 0
+        self.nfe = 0
 
     @torch.no_grad()
     def sample(self, steps, proj_fun=lambda x: x):
@@ -66,6 +67,8 @@ class DiffusionSampler(Sampler):
     @torch.no_grad()
     def direct_sample(self, steps, proj_fun=lambda x: x):
         self.model.eval()
+        self.update_cnt = 0
+        self.nfe = 0
         x = (self.token_dim - 1) * torch.ones(*self.batch_dims, dtype=torch.int64).to(self.device)
 
         x = proj_fun(x)
@@ -80,6 +83,7 @@ class DiffusionSampler(Sampler):
                 mask = x == self.token_dim - 1
                 p_condition[changed] = self.model(x[changed]).exp()
                 p_condition_mask = p_condition[mask]
+                self.nfe += 1
             probs_mask = p_condition_mask * update_rate
             probs_mask[..., -1] = 1 - update_rate
             update_x_mask = sample_categorical(probs_mask.to(torch.float32))
