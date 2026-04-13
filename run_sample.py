@@ -14,13 +14,12 @@ def main():
     parser.add_argument("--steps", type=int, default=1024)
     parser.add_argument("--method", type=str, default="tweedie") # ordered, euler, tweedie
     parser.add_argument("--strategy", type=str, default="direct") # direct, top_p, top_k
-    parser.add_argument("--strategy_para", type=float, default=0.8) # p for top_p, k for top_k, no use when direct 
+    parser.add_argument("--strategy_para", type=float, default=0.8) # p for top_p, k for top_k, no use when direct
 
 
 
     args = parser.parse_args()
 
-    
     device = torch.device('cuda')
     model, noise = load_model(args.model_path, device)
     token_dim = model.config.tokens + 1
@@ -32,7 +31,7 @@ def main():
         sampler = DiffusionSampler(args.method, model,  noise, (args.batch_size, args.length),token_dim, args.strategy, args.strategy_para, device=device)
     else:
         raise ValueError(f"Method {args.method} is not valid.")
-    
+
 
     samples = sampler.sample(args.steps)
     text_samples = tokenizer.batch_decode(samples)

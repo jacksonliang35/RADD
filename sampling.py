@@ -2,7 +2,7 @@ import abc
 import torch
 import torch.nn.functional as F
 from catsample import sample_with_strategy, sample_categorical
-
+from tqdm import tqdm
 
 import abc
 
@@ -47,7 +47,8 @@ class DiffusionSampler(Sampler):
         changed = torch.ones(self.batch_dims[0], dtype=torch.bool)
         logits = torch.zeros(*self.batch_dims, self.token_dim, dtype=self.model.dtype).to(self.device)
 
-        for i in range(steps):
+        # for i in range(steps):
+        for i in tqdm(range(steps), total=steps, desc="Diffusion Steps"):
             t = timesteps[i]
             update_rate = self.get_update_rate(t, steps)
             if changed.any():
@@ -71,7 +72,8 @@ class DiffusionSampler(Sampler):
         timesteps = torch.linspace(1, self.eps, steps + 1, device=self.device)
         changed = torch.ones(self.batch_dims[0], dtype=torch.bool)
         p_condition = torch.zeros(*self.batch_dims, self.token_dim, dtype=torch.float16).to(self.device)
-        for i in range(steps):
+        # for i in range(steps):
+        for i in tqdm(range(steps), total=steps, desc="Diffusion Steps"):
             t = timesteps[i]
             update_rate = self.get_update_rate(t, steps) if i < steps - 1 else 1 + 1e-3
             if changed.any():
@@ -110,7 +112,8 @@ class OrderedSampler(Sampler):
         x = (self.token_dim - 1) * torch.ones(*self.batch_dims, dtype=torch.int64).to(self.device)
         x = proj_fun(x)
 
-        for i in range(steps):
+        # for i in range(steps):
+        for i in tqdm(range(steps), total=steps, desc="Diffusion Steps"):
             logits = self.model.logits(x)
             update_logits = logits[:, order[i], :-1]
             x[:, order[i]] = sample_with_strategy(update_logits, self.strategy, self.strategy_para)
