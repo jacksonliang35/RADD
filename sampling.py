@@ -162,7 +162,7 @@ class OrderedSampler(Sampler):
 
     @torch.no_grad()
     def sample(self, steps, proj_fun=lambda x: x):
-        order = torch.randperm(1024) if self.order is None else self.order
+        order = torch.randperm(self.batch_dims[1]) if self.order is None else self.order
         self.model.eval()
         x = (self.token_dim - 1) * torch.ones(*self.batch_dims, dtype=torch.int64).to(self.device)
         x = proj_fun(x)
