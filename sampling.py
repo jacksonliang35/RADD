@@ -173,3 +173,40 @@ class OrderedSampler(Sampler):
             update_logits = logits[:, order[i], :-1]
             x[:, order[i]] = sample_with_strategy(update_logits, self.strategy, self.strategy_para)
         return x
+
+class FHS(Sampler):
+    def __init__(self, model, batch_dims, token_dim, device=torch.device('cuda')):
+        super().__init__(model, batch_dims, token_dim, strategy=None, device=device)
+
+    @torch.no_grad()
+    def sample(self, proj_fun=lambda x: x):
+        self.model.eval()
+        x = (self.token_dim - 1) * torch.ones(*self.batch_dims, dtype=torch.int64).to(self.device)
+        x = proj_fun(x)
+
+        import math
+        alpha = lambda t: math.exp(-t)
+        alpha_inv = lambda u: -math.log(u)
+
+        B, D = x.shape
+        tau = math.inf
+
+        for i in tqdm(range(D), total=steps, desc="FHS Steps"):
+            n = D - i
+            
+            u = torch.rand((), device=self.device).item()
+            tau = alpha_inv(1 - u ** (1 / n) * (1 - alpha(tau)))
+
+            # randomly select a mask token for each sample
+            is_mask = (x == mask_token)                             # (B, D)
+            l = torch.multinomial(is_mask.float(), num_samples=1)   # (B, 1)
+
+            # get sampling probability
+            probs = self.model(x).exp()                     # (B, D, S)
+            sampling_prob = probs.gather(dim=1, index=l.unsqueeze(-1).expand(-1, -1, probs.size(-1))).squeeze(1) # (B, S)
+            sampling_prob = sampling_prob / sampling_prob.sum(dim=-1, keepdim=True).clamp_min(1e-12)
+
+            new_tokens = sample_categorical(sampling_prob)  # (B, 1)
+            x.scatter_(dim=1, index=l, src=new_tokens)
+
+        return x
