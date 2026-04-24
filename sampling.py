@@ -181,14 +181,15 @@ class FHS(Sampler):
     @torch.no_grad()
     def sample(self, proj_fun=lambda x: x):
         self.model.eval()
-        x = (self.token_dim - 1) * torch.ones(*self.batch_dims, dtype=torch.int64).to(self.device)
-        x = proj_fun(x)
-
+        B, D = x.shape
+        mask_token = self.token_dim - 1
+        
         import math
         alpha = lambda t: math.exp(-t)
         alpha_inv = lambda u: -math.log(u)
 
-        B, D = x.shape
+        x = (self.token_dim - 1) * torch.ones(*self.batch_dims, dtype=torch.int64).to(self.device)
+        x = proj_fun(x)
         tau = math.inf
 
         for i in tqdm(range(D), total=D, desc="FHS Steps"):
