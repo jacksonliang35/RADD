@@ -181,7 +181,7 @@ class FHS(Sampler):
     @torch.no_grad()
     def sample(self, proj_fun=lambda x: x):
         self.model.eval()
-        B, D = batch_dims
+        B, D = self.batch_dims
         mask_token = self.token_dim - 1
 
         import math
