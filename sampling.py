@@ -208,6 +208,12 @@ class FHS(Sampler):
             sampling_prob = sampling_prob / sampling_prob.sum(dim=-1, keepdim=True).clamp_min(1e-12)
 
             new_tokens = sample_categorical(sampling_prob)  # (B, 1)
-            x.scatter_(dim=1, index=l, src=new_tokens.unsqueeze(1))
+            try:
+                x.scatter_(dim=1, index=l, src=new_tokens.unsqueeze(1))
+            except:
+                print(x)
+                print(l)
+                print(new_tokens)
+                exit(0)
 
         return x
