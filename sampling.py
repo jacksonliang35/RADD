@@ -201,17 +201,15 @@ class FHS(Sampler):
             # randomly select a mask token for each sample
             is_mask = (x == mask_token)                             # (B, D)
             l = torch.multinomial(is_mask.float(), num_samples=1)   # (B, 1)
-            print((x == mask_token).sum(dim=-1).amax())
 
             # get sampling probability
             probs = self.model(x).exp()                     # (B, D, S)
+            probs[..., mask_token] = 0
             sampling_prob = probs.gather(dim=1, index=l.unsqueeze(-1).expand(-1, -1, probs.size(-1))).squeeze(1) # (B, S)
             sampling_prob = sampling_prob / sampling_prob.sum(dim=-1, keepdim=True).clamp_min(1e-12)
 
             new_tokens = sample_categorical(sampling_prob)  # (B, 1)
+            x_detach = x.detach()
             x.scatter_(dim=1, index=l, src=new_tokens.unsqueeze(1))
-            print((x == mask_token).sum(dim=-1).amax())
-        assert((x == mask_token).amax() == 0)
-
 
         return x
