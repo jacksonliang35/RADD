@@ -191,9 +191,9 @@ class FHS(Sampler):
         B, D = x.shape
         tau = math.inf
 
-        for i in tqdm(range(D), total=steps, desc="FHS Steps"):
+        for i in tqdm(range(D), total=D, desc="FHS Steps"):
             n = D - i
-            
+
             u = torch.rand((), device=self.device).item()
             tau = alpha_inv(1 - u ** (1 / n) * (1 - alpha(tau)))
 
